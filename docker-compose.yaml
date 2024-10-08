@@ -1,21 +1,23 @@
-version: '3'
+version: '3.8'
 
 services:
 
   app:
     build: 
-      context: node
+      context: ./node      # Defina o diretório onde está o Dockerfile
     container_name: app
     networks:
       - node-network
     volumes:
       - ./node:/usr/app
-
     tty: true
     ports:
       - "3000:3000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    # Comando para instalar dependências e iniciar o app
+    command: bash -c "npm install && node index.js"
 
   nginx:
     image: nginx:latest
@@ -28,7 +30,6 @@ services:
     networks:
       - node-network
 
-
   db:
     image: mysql:5.7
     command: --innodb-use-native-aio=0
@@ -40,9 +41,14 @@ services:
     environment:
       - MYSQL_DATABASE=nodedb
       - MYSQL_ROOT_PASSWORD=root
-
     networks:
       - node-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
 networks:
   node-network:
