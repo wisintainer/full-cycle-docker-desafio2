@@ -15,6 +15,19 @@ const connection = mysql.createConnection(config);
 // Middleware para processar o corpo da requisição
 app.use(express.urlencoded({ extended: true }));
 
+// Criação da tabela 'people' se ela não existir
+const sqlCreateTable = `
+    CREATE TABLE IF NOT EXISTS people (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL
+    );
+`;
+
+connection.query(sqlCreateTable, (err) => {
+    if (err) throw err;
+    console.log('Tabela "people" criada ou já existe.');
+});
+
 // Rota para exibir e inserir registros
 app.get('/', (req, res) => {
     const sqlSelect = 'SELECT * FROM people';
